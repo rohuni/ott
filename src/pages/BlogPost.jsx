@@ -10,6 +10,12 @@ export default function BlogPost() {
   const post = getPost(id);
   const canonical = window.location.origin + `/blog/${id}`;
 
+  const ogImageUrl = (img) => {
+    if (!img || img.startsWith('data:')) return null;
+    if (img.startsWith('http')) return img;
+    return window.location.origin + img;
+  };
+
   if (!post) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-16 text-center">
@@ -35,7 +41,7 @@ export default function BlogPost() {
         <meta property="og:title" content={post.title} />
         <meta property="og:description" content={post.excerpt || post.title} />
         <meta property="og:url" content={canonical} />
-        {post.image ? <meta property="og:image" content={window.location.origin + post.image} /> : null}
+        {ogImageUrl(post.image) ? <meta property="og:image" content={ogImageUrl(post.image)} /> : null}
         <script type="application/ld+json">
           {JSON.stringify(
             {
@@ -51,7 +57,7 @@ export default function BlogPost() {
                 '@type': 'Organization',
                 name: '(주)메타코스모스',
               },
-              image: post.image ? [window.location.origin + post.image] : undefined,
+              image: ogImageUrl(post.image) ? [ogImageUrl(post.image)] : undefined,
             },
             null,
             0

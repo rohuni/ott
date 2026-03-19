@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>메타코스모스 통합 OTT 블로그</title>
+    <link>https://metacosmos.co.kr/blog</link>
+    <description>호텔·모텔 통합 OTT 도입 사례, 비용 절감 팁, 운영 노하우</description>
+    <language>ko-kr</language>
+    <lastBuildDate>Thu, 19 Mar 2026 00:00:00 +0900</lastBuildDate>
+    <ttl>60</ttl>
+
+    <item>
+      <title>호텔 통합 OTT, 왜 필요한가요?</title>
+      <link>https://metacosmos.co.kr/blog/1</link>
+      <guid isPermaLink="true">https://metacosmos.co.kr/blog/1</guid>
+      <pubDate>Wed, 15 Jan 2025 00:00:00 +0900</pubDate>
+      <description>투숙객이 객실에서 넷플릭스·디즈니+를 쓰려면 어떻게 해야 할까요?</description>
+    </item>
+
+    <item>
+      <title>통합 OTT 도입 후 예상 효과</title>
+      <link>https://metacosmos.co.kr/blog/2</link>
+      <guid isPermaLink="true">https://metacosmos.co.kr/blog/2</guid>
+      <pubDate>Mon, 20 Jan 2025 00:00:00 +0900</pubDate>
+      <description>고객 만족도와 매출에 어떤 변화가 있을까요?</description>
+    </item>
+
+    <item>
+      <title>설치부터 운영까지 한 번에</title>
+      <link>https://metacosmos.co.kr/blog/3</link>
+      <guid isPermaLink="true">https://metacosmos.co.kr/blog/3</guid>
+      <pubDate>Sat, 01 Feb 2025 00:00:00 +0900</pubDate>
+      <description>설치 비용과 절차는 어떻게 되나요?</description>
+    </item>
+  </channel>
+</rss>
+

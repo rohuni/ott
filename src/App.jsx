@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { AuthProvider } from './contexts/AuthContext';
 import { BlogProvider } from './contexts/BlogContext';
+import { ConsultationProvider, useConsultation } from './contexts/ConsultationContext';
 import Layout from './components/Layout';
 import QNA from './pages/QNA';
 import Blog from './pages/Blog';
@@ -98,6 +99,7 @@ const TiltCard = ({ children, className = '' }) => {
 
 const HomeContent = () => {
   const location = useLocation();
+  const { addConsultation } = useConsultation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [roomCount, setRoomCount] = useState(30);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
@@ -143,10 +145,10 @@ const HomeContent = () => {
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    setShowSuccessModal(true);
+    if (addConsultation) addConsultation({ name: formData.name, rooms: formData.rooms, phone: formData.phone });
     addToast(`${formData.name}에서 ${formData.rooms}실 상담 신청했습니다.`);
     setFormData({ name: '', rooms: '', phone: '' });
-    setTimeout(() => setShowSuccessModal(false), 3000);
+    setShowSuccessModal(true);
   };
 
   const addToast = (message) => {
@@ -898,8 +900,10 @@ const HomeContent = () => {
               <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 0.5 }} className="inline-block mb-4 p-4 bg-green-500/20 rounded-full">
                 <Check size={48} className="text-green-400" />
               </motion.div>
-              <h3 className="text-xl font-bold mb-2">상담 신청이 완료되었습니다!</h3>
-              <p className="text-slate-400 mb-4">빠른 시간 내에 전문가가 연락드리겠습니다.</p>
+              <h3 className="text-xl font-bold mb-2">상담 신청이 완료되었습니다</h3>
+              <p className="text-slate-400 mb-4 whitespace-pre-line">
+                감사합니다. 상담신청이 완료되었습니다. 담당자가 배정되는데로 빠른시간 안에 연락드리겠습니다. 감사합니다.
+              </p>
               <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => setShowSuccessModal(false)} className="px-6 py-2 bg-cyan-500 rounded-lg font-semibold hover:bg-cyan-600">
                 닫기
               </motion.button>
@@ -935,7 +939,8 @@ function App() {
       <BrowserRouter basename={import.meta.env.BASE_URL}>
         <AuthProvider>
           <BlogProvider>
-            <Routes>
+            <ConsultationProvider>
+              <Routes>
               <Route element={<Layout />}>
                 <Route index element={<HomeContent />} />
                 <Route path="qna" element={<QNA />} />
@@ -944,6 +949,7 @@ function App() {
                 <Route path="admin" element={<Admin />} />
               </Route>
             </Routes>
+            </ConsultationProvider>
           </BlogProvider>
         </AuthProvider>
       </BrowserRouter>

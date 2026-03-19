@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useBlog } from '../contexts/BlogContext';
+import { useConsultation } from '../contexts/ConsultationContext';
 import { motion } from 'framer-motion';
-import { LogIn, LogOut, Plus, Pencil, Trash2, FileText } from 'lucide-react';
+import { LogIn, LogOut, Plus, Pencil, Trash2, FileText, Phone, User } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 const emptyPost = { title: '', excerpt: '', image: '', body: '' };
@@ -11,11 +12,41 @@ const emptyPost = { title: '', excerpt: '', image: '', body: '' };
 export default function Admin() {
   const { isAdmin, login, logout } = useAuth();
   const { posts, addPost, updatePost, deletePost } = useBlog();
+  const { consultations, updateConsultation, deleteConsultation, getByStatus, addSampleConsultations, STATUS } =
+    useConsultation();
   const [id, setId] = useState('');
+  const [consultationFilter, setConsultationFilter] = useState(''); // '' = 전체
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(emptyPost);
+  const imageFileRef = useRef(null);
+  const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
+  const handleImageFile = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      window.alert('이미지 파일만 선택할 수 있습니다.');
+      e.target.value = '';
+      return;
+    }
+    if (file.size > MAX_IMAGE_BYTES) {
+      window.alert('이미지는 2MB 이하로 선택해 주세요. (용량이 크면 localStorage 한도에 걸릴 수 있습니다.)');
+      e.target.value = '';
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      setForm((f) => ({ ...f, image: typeof reader.result === 'string' ? reader.result : '' }));
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => {
+    setForm((f) => ({ ...f, image: '' }));
+    if (imageFileRef.current) imageFileRef.current.value = '';
+  };
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -33,11 +64,13 @@ export default function Admin() {
   const startAdd = () => {
     setEditingId('new');
     setForm(emptyPost);
+    if (imageFileRef.current) imageFileRef.current.value = '';
   };
 
   const startEdit = (post) => {
     setEditingId(post.id);
     setForm({ title: post.title, excerpt: post.excerpt || '', image: post.image || '', body: post.body || '' });
+    if (imageFileRef.current) imageFileRef.current.value = '';
   };
 
   const savePost = (e) => {
@@ -161,13 +194,29 @@ export default function Admin() {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1">이미지 URL</label>
+              <label className="block text-sm font-medium text-slate-300 mb-1">대표 이미지 (파일 첨부)</label>
               <input
-                value={form.image}
-                onChange={(e) => setForm((f) => ({ ...f, image: e.target.value }))}
-                className="w-full px-4 py-2 bg-slate-700/50 border border-cyan-500/30 rounded-lg focus:outline-none focus:border-cyan-400"
-                placeholder="/자료/images/..."
+                ref={imageFileRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp,image/gif"
+                onChange={handleImageFile}
+                className="block w-full text-sm text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-cyan-600 file:text-white file:font-medium hover:file:bg-cyan-500"
               />
+              <p className="text-xs text-slate-500 mt-1">JPG·PNG·WebP·GIF, 2MB 이하 권장. 첨부 시 글에 그대로 저장됩니다.</p>
+              {form.image ? (
+                <div className="mt-3 flex flex-wrap items-start gap-3">
+                  <div className="rounded-lg border border-cyan-500/30 overflow-hidden bg-slate-900 max-w-xs">
+                    <img src={form.image} alt="미리보기" className="max-h-40 w-auto object-contain" />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={clearImage}
+                    className="px-3 py-1.5 text-sm bg-slate-600 hover:bg-slate-500 rounded-lg text-slate-200"
+                  >
+                    이미지 제거
+                  </button>
+                </div>
+              ) : null}
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-1">본문</label>
@@ -211,6 +260,104 @@ export default function Admin() {
           </li>
         ))}
       </ul>
+
+      {/* 상담 신청 관리 */}
+      <section className="mt-16 pt-12 border-t border-slate-700">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-2">
+            <Phone className="text-cyan-400" size={24} />
+            상담 신청 관리
+          </h2>
+          <button
+            type="button"
+            onClick={() => addSampleConsultations()}
+            className="px-3 py-1.5 text-sm rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 border border-cyan-500/30"
+          >
+            샘플 3건 추가
+          </button>
+        </div>
+        <div className="flex flex-wrap gap-2 mb-4">
+          <button
+            type="button"
+            onClick={() => setConsultationFilter('')}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${consultationFilter === '' ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600'}`}
+          >
+            전체 ({consultations.length})
+          </button>
+          {[STATUS.REQUEST, STATUS.IN_PROGRESS, STATUS.DONE].map((s) => {
+            const list = getByStatus(s);
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setConsultationFilter(s)}
+                className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${consultationFilter === s ? 'bg-cyan-500/30 text-cyan-300 border border-cyan-500/50' : 'bg-slate-700/50 text-slate-400 hover:bg-slate-600'}`}
+              >
+                {s} ({list.length})
+              </button>
+            );
+          })}
+        </div>
+        <div className="space-y-3">
+          {(consultationFilter ? getByStatus(consultationFilter) : consultations).map((c) => (
+            <div
+              key={c.id}
+              className="p-4 rounded-xl bg-slate-800/80 border border-cyan-500/20 flex flex-wrap items-center gap-4"
+            >
+              <div className="min-w-0 flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 text-sm">
+                <div>
+                  <span className="text-slate-500">상호명</span>
+                  <p className="font-medium text-slate-200 truncate">{c.name}</p>
+                </div>
+                <div>
+                  <span className="text-slate-500">객실 수</span>
+                  <p className="text-slate-200">{c.rooms}실</p>
+                </div>
+                <div>
+                  <span className="text-slate-500">연락처</span>
+                  <p className="text-slate-200">{c.phone}</p>
+                </div>
+                <div>
+                  <span className="text-slate-500">신청일</span>
+                  <p className="text-slate-400 text-xs">{c.createdAt}</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+                <select
+                  value={c.status}
+                  onChange={(e) => updateConsultation(c.id, { status: e.target.value })}
+                  className="px-3 py-1.5 bg-slate-700 border border-cyan-500/30 rounded-lg text-sm text-slate-200 focus:outline-none focus:border-cyan-400"
+                >
+                  <option value={STATUS.REQUEST}>{STATUS.REQUEST}</option>
+                  <option value={STATUS.IN_PROGRESS}>{STATUS.IN_PROGRESS}</option>
+                  <option value={STATUS.DONE}>{STATUS.DONE}</option>
+                </select>
+                <div className="flex items-center gap-1">
+                  <User size={16} className="text-slate-500 flex-shrink-0" />
+                  <input
+                    type="text"
+                    value={c.assignee || ''}
+                    onChange={(e) => updateConsultation(c.id, { assignee: e.target.value })}
+                    placeholder="담당자"
+                    className="w-24 px-2 py-1.5 bg-slate-700/50 border border-cyan-500/30 rounded-lg text-sm text-slate-200 placeholder:text-slate-500 focus:outline-none focus:border-cyan-400"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => window.confirm('이 상담 신청을 삭제할까요?') && deleteConsultation(c.id)}
+                  className="p-2 text-slate-400 hover:text-red-400 rounded-lg"
+                  title="삭제"
+                >
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+        {consultations.length === 0 && (
+          <p className="text-slate-500 text-sm py-8 text-center">아직 상담 신청이 없습니다.</p>
+        )}
+      </section>
     </div>
   );
 }
