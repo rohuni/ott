@@ -124,9 +124,10 @@ export default function QNA() {
         href="/자료/meta_ott.pdf"
         download="meta_ott.pdf"
         title="서비스 설명서 다운"
-        className="fixed bottom-5 right-4 z-50 w-12 h-12 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/40 flex items-center justify-center hover:scale-105 hover:shadow-cyan-400/60 transition-all"
+        className="fixed bottom-4 md:bottom-5 right-3 md:right-4 z-50 h-10 md:h-12 px-3 md:px-4 rounded-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white shadow-lg shadow-cyan-500/40 flex items-center gap-1.5 md:gap-2 font-semibold text-xs md:text-sm hover:scale-105 hover:shadow-cyan-400/60 transition-all"
       >
-        <FileDown size={22} />
+        <FileDown size={18} className="md:w-5 md:h-5" />
+        <span>설명서</span>
       </a>
     </div>
   );
